@@ -1,3 +1,5 @@
+import numpy as np
+
 class DecisionTreeClassifier:
     def __init__(self, width = 50):
         self.width = width
@@ -5,10 +7,12 @@ class DecisionTreeClassifier:
         self.y = np.array([])
 
     def calculate_H(self, left_indices, right_indices):
+        """"""
         pass #TO DO#
 
     def find_best_node_candidate_in_a_feature(self, feature_indices, column):
-        feature_array = x[feature_indices, column]
+        """"""
+        feature_array = self.x[feature_indices, column]
         sorted_feature_array = feature_array.sort()
         sorted_indices = np.argsort(feature_array)
         list_sorted_indices = list(sorted_indices)
@@ -18,8 +22,8 @@ class DecisionTreeClassifier:
             if i == 0:
                 continue
 
-            label_for_i = y[list_sorted_indices[i]]
-            label_for_i_minus_1 = y[list_sorted_indices[i-1]]
+            label_for_i = self.y[list_sorted_indices[i]]
+            label_for_i_minus_1 = self.y[list_sorted_indices[i-1]]
             if label_for_i == label_for_i_minus_1:
                 continue
             else:
@@ -40,23 +44,28 @@ class DecisionTreeClassifier:
 
 
     def split(self, indices_list):
+        """"""
         potential_node_index_dict ={}
 
-        for column in range(x.axis[1]):
-            h_index_tuple = self.find_best_node_candidate_in_a_feature(self, feature_indices = indices_list, column)
-            #       Add tuple to a dictionary of features
+        for column in range(self.x.axis[1]):
+            h_index_tuple = self.find_best_node_candidate_in_a_feature(feature_indices = indices_list, column)
+            #Add tuple to a dictionary of features
             potential_node_index_dict[column]=h_index_tuple
+
         node_H = max(potential_node_index_dict.values(), key = lambda item: item[1])
+
         for dict in potential_node_index_dict.keys():
-            if dict[0] == node_H
-            return y_left_indices, y_right_indices
+            if dict[0] == node_H:
+                return y_left_indices, y_right_indices
 
     def calculate_H(self, labels_distribution):
         pass #TO DO#
 
     def grow_tree(self, y_left_indices, y_right_indices):
+        """"""
         for indices in [y_left_indices, y_right_indices]:
             y_left_indices, y_right_indices = self.split(x, indices_list = indices)
+
         return y_left_indices, y_right_indices
 
     def fit(self, x, y):
