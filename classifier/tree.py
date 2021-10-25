@@ -1,15 +1,13 @@
 import numpy as np
-from read_dataset import read_dataset
-from split_dataset import split_dataset
+from classifier.node import Node
 
-class Node:
-    def __init__(self):
-        self.feature_num = 0
-        self.split_val = 0
-        self.left_node = None
-        self.right_node = None
-        self.predicted_room = None
-        self.leaf = False
+def compute_accuracy(y, y_predicted):
+    assert len(y) == len(y_predicted)
+    try:
+        return np.sum(y == y_predicted)/len(y)
+    except ZeroDivisionError:
+        return 0
+
 
 class DecisionTreeClassifier:
     def __init__(self, max_depth=None):
@@ -105,20 +103,4 @@ class DecisionTreeClassifier:
 
         return predicted_values
 
-def compute_accuracy(y, y_predicted):
-    assert len(y) == len(y_predicted)
-    try:
-        return np.sum(y == y_predicted)/len(y)
-    except ZeroDivisionError:
-        return 0
 
-
-filepath = 'wifi_db/clean_dataset.txt'
-X, y = read_dataset(filepath)
-X_train, X_test, y_train, y_test = split_dataset(X, y, test_proportion=0.2)  ## change the split
-tree_clf = DecisionTreeClassifier(max_depth=100)
-tree_clf.fit(X_train, y_train)
-y_train_predicted = tree_clf.predict(X_train)
-y_test_predicted = tree_clf.predict(X_test)
-print(f"The training accuracy is: {compute_accuracy(y_train, y_train_predicted)}")
-print(f"The test accuracy is: {compute_accuracy(y_test, y_test_predicted)}")
