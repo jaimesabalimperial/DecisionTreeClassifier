@@ -19,7 +19,7 @@ def read_dataset(filepath):
     x = []
     y = []
     for line in open(filepath):
-        if line.strip() != "": # handle empty rows in file
+        if line.strip() != "":  # handle empty rows in file
             row = line.rstrip().split('\t')
             x.append(list(map(float, row[:-1]))) 
             y.append(int(row[-1]))

@@ -1,5 +1,9 @@
+import numpy as np
+from read_dataset import read_dataset
+from split_dataset import split_dataset
+
 class Node:
-    def __init__(self, predicted_room, feature_num, split_val, left_node, right_node):
+    def __init__(self):
         self.feature_num = 0
         self.split_val = 0
         self.left_node = None
@@ -12,7 +16,7 @@ class DecisionTreeClassifier:
 
     def calculate_H(self, y):
         classes = np.unique(y)
-        class_probabilities = [y.count(room)/len(y) for room in classes]
+        class_probabilities = [np.count_nonzero(y == room)/len(y) for room in classes]
         H = np.sum([-p*np.log2(p) for p in class_probabilities])
         return H
 
@@ -20,38 +24,34 @@ class DecisionTreeClassifier:
         information_gains = {}
         data_entropy = self.calculate_H(y)
 
-        for feature_idx in range(len(X.shape[1])):
+        for feature_idx in range(X.shape[1]):
             # sort features
-            feature_array  = X[:, feature_idx]
-            sorted_feature_array = feature_array.sort()
+            feature_array = X[:, feature_idx]
+            sorted_feature_array = sorted(feature_array)
             sorted_indices = np.argsort(feature_array)
 
             # sort labels
             sorted_labels = y[sorted_indices]
 
             # decide the best split
-            for split_idx, split_val in enumerate(sorted_feature_array):
+            for split_idx in range(len(sorted_feature_array)):
                 if split_idx == 0:
                     continue
-                current_label = sorted_labels[split_idx]
-                prev_label = sorted_labels[split_idx - 1]
+                left_entropy = self.calculate_H(sorted_labels[:split_idx])
+                right_entropy = self.calculate_H(sorted_labels[split_idx:])
+                num_feature = X.shape[0]
+                remainder = (split_idx/num_feature)*left_entropy + ((num_feature-split_idx)/num_feature)*right_entropy
+                info_gain = data_entropy - remainder
+                threshold = (sorted_feature_array[split_idx - 1] + sorted_feature_array[split_idx])/2
+                indices_left_node = sorted_indices[:split_idx]
+                indices_right_node = sorted_indices[split_idx:]
+                information_gains[(feature_idx, tuple(indices_left_node), tuple(indices_right_node), threshold)] = info_gain
 
-                if  current_label == prev_label:
-                    continue
-                else:
-                    left_entropy = self.calculate_H(sorted_labels[:split_idx])
-                    right_entropy = self.calculate_H(sorted_labels[split_idx:])
-                    num_feature = X.shape[0]
-                    remainder = (split_idx/num_feature)*left_entropy + ((num_feature-split_idx)/num_feature)*right_entropy
-                    info_gain = data_entropy - remainder
-                    threshold = (sorted_feature_array[split_idx - 1] + sorted_feature_array[split_idx])/2
-                    information_gains[(feature_idx, threshold)] = info_gain
-
-            best_split = max(information_gains, key=information_gains.get)
-            return best_split[0], best_split[1]
+        best_split = max(information_gains, key=information_gains.get)
+        return best_split[0], best_split[1], best_split[2], best_split[3]
 
     def has_pure_class(self, y):
-        return if np.all(y == y[0])
+        return np.all(y == y[0])
 
     def find_predicted_room(self, y):
         classes = np.unique(y)
@@ -61,20 +61,17 @@ class DecisionTreeClassifier:
         return classes[np.argmax(num_samples_in_class)]
 
     def grow_tree(self, X, y, depth=0):
-        predicted_room = self.find_predicted_room(y)
         node = Node()
-        node.predicted_room = predicted_room
+        node.predicted_room = self.find_predicted_room(y)
         # split recursively
-        if depth < self.max_depth and not has_pure_class(y):
-            feature_idx, threshold = self.find_split(X, y)
-            if feature_idx is not None:
-                left_indices = X[:, feature_idx] < threshold
-                X_left, y_left = X[left_indices], y[left_indices]
-                X_right, y_right = X[~left_indices], y[~left_indices]
-                node.feature_num = feature_idx
-                node.split_val = threshold
-                node.left_node = self.grow_tree(X_left, y_left, depth + 1)
-                node.right_node = self.grow_tree(X_right, y_right, depth + 1)
+        if depth < self.max_depth and not self.has_pure_class(y):
+            feature_idx, indices_left_node, indices_right_node, threshold = self.find_split(X, y)
+            X_left, y_left = X[indices_left_node, :], y[indices_left_node, ]
+            X_right, y_right = X[indices_right_node, :], y[indices_right_node, ]
+            node.feature_num = feature_idx
+            node.split_val = threshold
+            node.left_node = self.grow_tree(X_left, y_left, depth + 1)
+            node.right_node = self.grow_tree(X_right, y_right, depth + 1)
         return node
 
     def fit(self, X, y):
@@ -85,9 +82,9 @@ class DecisionTreeClassifier:
     def predict(self, X):
         predicted_values = []
         for sample in X:
-            root = self.trained_tree
-            while node.left_node:
-                if sample[node.feature_num] < node.threshold:
+            node = self.trained_tree
+            while node.left_node is not None:
+                if sample[node.feature_num] < node.split_val:
                     node = node.left_node
                 else:
                     node = node.right_node
@@ -104,9 +101,10 @@ def compute_accuracy(y, y_predicted):
 
 filepath = 'wifi_db/clean_dataset.txt'
 X, y = read_dataset(filepath)
-X_train, X_test, y_train, y_test = split_dataset(X, y, test_proportion = 0.2)  ## change the split
+X_train, X_test, y_train, y_test = split_dataset(X, y, test_proportion=0.2)  ## change the split
 tree_clf = DecisionTreeClassifier(max_depth=100)
 tree_clf.fit(X_train, y_train)
-y_predicted = tree_clf.predict(X_test)
-print(f"The training accuracy is: {compute_accuracy(y_train, y_predicted)}")
-print(f"The test accuracy is: {compute_accuracy(y_test, y_predicted)}")
+y_train_predicted = tree_clf.predict(X_train)
+y_test_predicted = tree_clf.predict(X_test)
+print(f"The training accuracy is: {compute_accuracy(y_train, y_train_predicted)}")
+print(f"The test accuracy is: {compute_accuracy(y_test, y_test_predicted)}")
