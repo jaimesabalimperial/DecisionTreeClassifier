@@ -130,8 +130,8 @@ class DecisionTreeClassifier:
             X_right, y_right = X[splitting_indices[1],], y[splitting_indices[1],]
             node.feature_num = feature_idx
             node.split_val = threshold
-            node.left_node = self.grow_tree(X_left, y_left, depth + 1)
-            node.right_node = self.grow_tree(X_right, y_right, depth + 1)
+            node.left_daughter = self.grow_tree(X_left, y_left, depth + 1)
+            node.right_daughter = self.grow_tree(X_right, y_right, depth + 1)
         else: 
             node.leaf = True #if max depth or only one class shown in labels, set the current node as a leaf node
             node.predicted_room = self.find_predicted_room(y) #predict a room for leaf node
@@ -159,9 +159,9 @@ class DecisionTreeClassifier:
             node = self.trained_tree
             while not node.leaf:
                 if sample[node.feature_num] < node.split_val:
-                    node = node.left_node
+                    node = node.left_daughter
                 else:
-                    node = node.right_node
+                    node = node.right_daughter
             predicted_values.append(node.predicted_room)
 
         return predicted_values
