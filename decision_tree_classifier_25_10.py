@@ -37,15 +37,20 @@ class DecisionTreeClassifier:
             for split_idx in range(len(sorted_feature_array)):
                 if split_idx == 0:
                     continue
-                left_entropy = self.calculate_H(sorted_labels[:split_idx])
-                right_entropy = self.calculate_H(sorted_labels[split_idx:])
-                num_feature = X.shape[0]
-                remainder = (split_idx/num_feature)*left_entropy + ((num_feature-split_idx)/num_feature)*right_entropy
-                info_gain = data_entropy - remainder
-                threshold = (sorted_feature_array[split_idx - 1] + sorted_feature_array[split_idx])/2
-                indices_left_node = sorted_indices[:split_idx]
-                indices_right_node = sorted_indices[split_idx:]
-                information_gains[(feature_idx, tuple(indices_left_node), tuple(indices_right_node), threshold)] = info_gain
+                current_label = sorted_labels[split_idx]
+                prev_label = sorted_labels[split_idx - 1]
+                if current_label == prev_label:
+                    continue
+                else: 
+                    left_entropy = self.calculate_H(sorted_labels[:split_idx])
+                    right_entropy = self.calculate_H(sorted_labels[split_idx:])
+                    num_feature = X.shape[0]
+                    remainder = (split_idx/num_feature)*left_entropy + ((num_feature-split_idx)/num_feature)*right_entropy
+                    info_gain = data_entropy - remainder
+                    threshold = (sorted_feature_array[split_idx - 1] + sorted_feature_array[split_idx])/2
+                    indices_left_node = tuple(sorted_indices[:split_idx])
+                    indices_right_node = tuple(sorted_indices[split_idx:])
+                    information_gains[(feature_idx, indices_left_node, indices_right_node, threshold)] = info_gain
 
         best_split = max(information_gains, key=information_gains.get)
         return best_split[0], best_split[1], best_split[2], best_split[3]
@@ -55,9 +60,8 @@ class DecisionTreeClassifier:
 
     def find_predicted_room(self, y):
         classes = np.unique(y)
-        num_samples_in_class = []
-        for sample in classes:
-            num_samples_in_class.append(np.sum(y == sample))
+        num_samples_in_class = [np.sum(y == sample) for sample in classes]
+
         return classes[np.argmax(num_samples_in_class)]
 
     def grow_tree(self, X, y, depth=0):
@@ -72,6 +76,7 @@ class DecisionTreeClassifier:
             node.split_val = threshold
             node.left_node = self.grow_tree(X_left, y_left, depth + 1)
             node.right_node = self.grow_tree(X_right, y_right, depth + 1)
+
         return node
 
     def fit(self, X, y):
