@@ -1,6 +1,6 @@
 import numpy as np
 
-def read_dataset(filepath, not_noisy = True):
+def load_dataset(filepath, not_noisy = True):
     """ Read in the dataset from the specified filepath
 
     Args:

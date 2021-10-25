@@ -1,6 +1,6 @@
 from numpy.random import default_rng
 import numpy as np
-from data_manipulation.read_dataset import *
+from data_manipulation.load_dataset import *
 
 def split_dataset(x, y, test_proportion, random_generator=default_rng(60012)):
     """ Split dataset into training and test sets, according to the given 
