@@ -18,6 +18,7 @@ def compute_accuracy(y, y_predicted):
 class DecisionTreeClassifier:
     def __init__(self, max_depth=None):
         self.max_depth = max_depth
+        self.trained_tree = None
 
     def calculate_H(self, y):
         """Calculates the entropy of a given dataset (D) through the equation:

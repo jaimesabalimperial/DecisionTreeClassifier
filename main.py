@@ -1,4 +1,5 @@
 from classifier.tree import DecisionTreeClassifier, compute_accuracy
+from classifier.visualiser import visualise
 from data_manipulation.load_dataset import load_dataset
 from data_manipulation.split_dataset import split_dataset
 
@@ -14,3 +15,7 @@ if __name__ == '__main__':
 
     print(f"The training accuracy is: {compute_accuracy(y_train, y_predicted_train)}")
     print(f"The test accuracy is: {compute_accuracy(y_test, y_predicted_test)}")
+
+    #visualise tree
+    classifier = tree_clf.trained_tree
+    #visualise(classifier)
