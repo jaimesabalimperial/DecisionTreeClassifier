@@ -22,7 +22,7 @@ def read_dataset(filepath):
         if line.strip() != "": # handle empty rows in file
             row = line.rstrip().split('\t')
             x.append(list(map(float, row[:-1]))) 
-            y.append(row[-1])
+            y.append(int(row[-1]))
 
     x = np.array(x)
     y = np.array(y)
