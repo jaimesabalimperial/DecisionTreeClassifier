@@ -9,6 +9,7 @@ class Node:
         self.left_node = None
         self.right_node = None
         self.predicted_room = None
+        self.leaf = False
 
 class DecisionTreeClassifier:
     def __init__(self, max_depth=None):
@@ -67,6 +68,7 @@ class DecisionTreeClassifier:
     def grow_tree(self, X, y, depth=0):
         node = Node()
         node.predicted_room = self.find_predicted_room(y)
+
         # split recursively
         if depth < self.max_depth and not self.has_pure_class(y):
             feature_idx, indices_left_node, indices_right_node, threshold = self.find_split(X, y)
@@ -76,6 +78,8 @@ class DecisionTreeClassifier:
             node.split_val = threshold
             node.left_node = self.grow_tree(X_left, y_left, depth + 1)
             node.right_node = self.grow_tree(X_right, y_right, depth + 1)
+        else: 
+            node.leaf = True
 
         return node
 
@@ -88,7 +92,7 @@ class DecisionTreeClassifier:
         predicted_values = []
         for sample in X:
             node = self.trained_tree
-            while node.left_node is not None:
+            while not node.leaf:
                 if sample[node.feature_num] < node.split_val:
                     node = node.left_node
                 else:
