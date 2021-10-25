@@ -57,15 +57,18 @@ class DecisionTreeClassifier:
         return best_split[0], best_split[1], best_split[2], best_split[3]
 
     def has_pure_class(self, y):
+        """"""
         return np.all(y == y[0])
 
     def find_predicted_room(self, y):
+        """"""
         classes = np.unique(y)
         num_samples_in_class = [np.sum(y == sample) for sample in classes]
 
         return classes[np.argmax(num_samples_in_class)]
 
     def grow_tree(self, X, y, depth=0):
+        """"""
         node = Node()
         node.predicted_room = self.find_predicted_room(y)
 
@@ -89,6 +92,7 @@ class DecisionTreeClassifier:
         self.trained_tree = self.grow_tree(X, y)
 
     def predict(self, X):
+        """"""
         predicted_values = []
         for sample in X:
             node = self.trained_tree
@@ -98,6 +102,7 @@ class DecisionTreeClassifier:
                 else:
                     node = node.right_node
             predicted_values.append(node.predicted_room)
+
         return predicted_values
 
 def compute_accuracy(y, y_predicted):
