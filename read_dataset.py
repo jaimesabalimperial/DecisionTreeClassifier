@@ -1,6 +1,6 @@
 import numpy as np
 
-def read_dataset(filepath):
+def read_dataset(filepath, not_noisy = True):
     """ Read in the dataset from the specified filepath
 
     Args:
@@ -18,14 +18,19 @@ def read_dataset(filepath):
     """
     x = []
     y = []
-    for line in open(filepath):
-        if line.strip() != "":  # handle empty rows in file
-            row = line.rstrip().split('\t')
-            x.append(list(map(float, row[:-1]))) 
-            y.append(int(row[-1]))
+    if not_noisy:
+        for line in open(filepath):
+            if line.strip() != "":  # handle empty rows in file
+                row = line.rstrip().split('\t')
+                x.append(list(map(float, row[:-1])))
+                y.append(int(row[-1]))
+    else:
+        for line in open(filepath):
+            if line.strip() != "":  # handle empty rows in file
+                row = line.rstrip("\n").split(' ')
+                x.append(list(map(float, row[:-1])))
+                y.append(int(float(row[-1])))
 
     x = np.array(x)
     y = np.array(y)
     return (x, y)
-
-#x, y = read_dataset("wifi_db/clean_dataset.txt")
