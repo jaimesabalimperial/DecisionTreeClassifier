@@ -133,7 +133,7 @@ class DecisionTreeClassifier:
             node.left_daughter = self.grow_tree(X_left, y_left, depth + 1)
             node.right_daughter = self.grow_tree(X_right, y_right, depth + 1)
         else: 
-            node.leaf = True #if max depth or only one class shown in labels, set the current node as a leaf node
+            node.is_leaf = True #if max depth or only one class shown in labels, set the current node as a leaf node
             node.predicted_room = self.find_predicted_room(y) #predict a room for leaf node
 
         return node
@@ -157,7 +157,7 @@ class DecisionTreeClassifier:
         predicted_values = []
         for sample in X:
             node = self.trained_tree
-            while not node.leaf:
+            while not node.is_leaf:
                 if sample[node.feature_num] < node.split_val:
                     node = node.left_daughter
                 else:

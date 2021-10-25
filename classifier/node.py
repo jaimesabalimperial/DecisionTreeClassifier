@@ -5,4 +5,4 @@ class Node:
         self.left_daughter = None
         self.right_daughter = None
         self.predicted_room = None
-        self.leaf = False
+        self.is_leaf = False
