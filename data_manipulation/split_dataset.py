@@ -21,15 +21,15 @@ def split_dataset(x, y, test_proportion, random_generator=default_rng(60012)):
                - y_test (np.ndarray): Test labels, shape (N_train, )
     """
     n_test = round(len(x)*test_proportion)
+    n_train = len(x) - n_test
+    shuffled_indices = random_generator.permutation(len(x))
     
-    index_test = np.random.choice(x.shape[0], n_test, replace=False)
-    indices = np.in1d(range(x.shape[0]), index_test)
+    x_test = x[shuffled_indices[n_train:]]
+    y_test = y[shuffled_indices[n_train:]]
     
-    x_test = x[indices]
-    y_test = y[indices]
+    x_train = x[shuffled_indices[:n_train]]
+    y_train = y[shuffled_indices[:n_train]]
     
-    x_train = x[~indices]
-    y_train = y[~indices]
     
     return (x_train, x_test, y_train, y_test)
 
