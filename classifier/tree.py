@@ -1,19 +1,6 @@
 import numpy as np
 from classifier.node import Node
 
-def compute_accuracy(y, y_predicted):
-    """Computes the accuracy of the decision tree classifier.
-    
-    Args: 
-        y (np.array): array of labels to the data. 
-        y_predicted (list): predicted values only from features data using the built decision tree classifier. 
-    """
-    assert len(y) == len(y_predicted)
-    try:
-        return np.sum(y == y_predicted)/len(y)
-    except ZeroDivisionError:
-        return 0
-
 
 class DecisionTreeClassifier:
     def __init__(self, max_depth=None):
@@ -78,7 +65,7 @@ class DecisionTreeClassifier:
                     remainder = (split_idx/num_samples)*left_entropy + ((num_samples-split_idx)/num_samples)*right_entropy
                     info_gain = data_entropy - remainder 
 
-                    threshold = (sorted_feature_array[split_idx - 1] + sorted_feature_array[split_idx])/2
+                    threshold = (sorted_feature_array[split_idx - 1] + sorted_feature_array[split_idx])/2 #mean value of two consecutive data points within a feature
                     indices_left_node, indices_right_node = tuple(sorted_indices[:split_idx]), tuple(sorted_indices[split_idx:])
 
                     #add info gain to dictionary with the feature pertaining to the split, the indices of the sorted left and right sides, and the threshold
