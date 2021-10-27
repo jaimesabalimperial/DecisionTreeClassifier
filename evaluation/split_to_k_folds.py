@@ -5,11 +5,14 @@ seed(60012) #set random seed
 
 def split_to_k_folds(X, y, folds):
     """"""
+    #initialise lists to be extracted
     test_set = list()
     label_set = list()
     labels_copy = y.tolist()
     dataset_copy = X.tolist()
-    fold_size = int(len(X) / folds)
+    fold_size = int(len(X)/folds) 
+
+    #retrieve random test data and corresponding labels 
     for _ in range(folds):
         test_set_fold = list()
         label_set_fold = list()
@@ -37,6 +40,7 @@ def create_data_k_fold(X, y, folds=10):
         del list_labels_copy[i]
         train_data.append(np.array(np.concatenate(list_data_copy)))
         train_labels.append(np.array(np.concatenate(list_labels_copy)))
+
     return train_data, train_labels, test_data, test_labels
 
 

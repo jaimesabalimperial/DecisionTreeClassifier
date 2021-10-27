@@ -25,7 +25,7 @@ class TreePruning:
                 node.right_daughter = None
                 node.is_leaf = True
             else:
-                updated_path = path+".right_daughter"
+                updated_path = path + ".right_daughter"
                 self.prune_left_most_parent(node.right_daughter, path = updated_path)
         else:
             updated_path = path + ".left_daughter"
@@ -37,12 +37,12 @@ class TreePruning:
     def update_trained_tree(self, tree1, tree2):
         """
         """
-        metrics = EvaluationMetrics()
+        metrics = EvaluationMetrics() 
 
         y_predicted_test_pre_pruning = self.predict_tree(self.x_test, tree = tree1)
         y_predicted_test_post_pruning = self.predict_tree(self.x_test, tree = tree2)
         tree_accuracy_post_pruning= metrics.compute_accuracy(self.y_test, y_predicted_test_post_pruning)
-        tree_accuracy_pre_pruning = metrics.compute_accuracy(self.y_test,y_predicted_test_pre_pruning)
+        tree_accuracy_pre_pruning = metrics.compute_accuracy(self.y_test,y_predicted_test_pre_pruning) 
 
         return  tree_accuracy_post_pruning > tree_accuracy_pre_pruning
 

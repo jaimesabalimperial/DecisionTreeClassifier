@@ -9,6 +9,8 @@ class EvaluationMetrics:
         self.y_predicted = y_predicted
 
     def compute_confusion_matrix(self):
+        """
+        """
         # compute TP
         num_of_classes = len(list(set(self.y)))
         confusion_mat = np.empty([num_of_classes, num_of_classes])
@@ -18,6 +20,8 @@ class EvaluationMetrics:
         return confusion_mat
 
     def compute_accuracy(self):
+        """
+        """
         assert len(self.y) == len(self.y_predicted)
         try:
             return np.sum(self.y == self.y_predicted) / len(self.y)
@@ -25,6 +29,8 @@ class EvaluationMetrics:
             return 0
 
     def compute_precision_recall_f1(self):
+        """
+        """
         confusion_matrix = self.compute_confusion_matrix()
         precision = []
         recall = []
@@ -38,22 +44,27 @@ class EvaluationMetrics:
 
 
 def k_fold_evaluation(X, y, folds=10):
+    """
+    """
     X_train, y_train, X_test, y_test = create_data_k_fold(X, y, folds)
+
+    #initialise metric lists
     confusion_matrices = []
     accuracies_list = []
     precisions_list = []
     recalls_list = []
     f1_scores = []
 
-    for fold in range(folds):
+    for i in range(folds):
         # build tree
         tree_clf = DecisionTreeClassifier(max_depth=100)
-        tree_clf.fit(X_train[fold], y_train[fold])
-        y_test_predicted = tree_clf.predict(X_test[fold])
-        metrics = EvaluationMetrics(y_test[fold], y_test_predicted)
-        confusion_mat = metrics.compute_confusion_matrix()
+        tree_clf.fit(X_train[i], y_train[i])
+        y_test_predicted = tree_clf.predict(X_test[i])
+        metrics = EvaluationMetrics(y_test[i], y_test_predicted)
+        confusion_mat = metrics.compute_confusion_matrix() 
         accuracy = metrics.compute_accuracy()
         precision, recall, f1_score = metrics.compute_precision_recall_f1()
+
         confusion_matrices.append(np.array(confusion_mat))
         accuracies_list.append(accuracy)
         precisions_list.append(precision)

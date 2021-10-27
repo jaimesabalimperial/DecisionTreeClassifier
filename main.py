@@ -19,7 +19,7 @@ if __name__ == '__main__':
     confusion_mat = metrics.compute_confusion_matrix()
     accuracy = metrics.compute_accuracy()
     precision, recall, f1_score = metrics.compute_precision_recall_f1()
-    k_fold_evaluation(X_train, y_train)
+    k_fold_evaluation(X, y)
 
     #visualise tree
     tree = tree_clf.trained_tree
