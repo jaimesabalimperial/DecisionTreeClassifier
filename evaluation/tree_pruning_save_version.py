@@ -15,7 +15,7 @@ class TreePruning:
         self.y_train = y_train
         self.y_test = y_test
 
-    def prune_left_most_parent(self, node, path=""):
+    def prune_left_most_parent(self, node, path=[]):
         ''' Find next deepest, left most node for pruning. Track trained tree in parallel to 
             potentially update its node
         '''
@@ -25,13 +25,13 @@ class TreePruning:
                 node.right_daughter = None
                 node.is_leaf = True
             else:
-                updated_path = path + ".right_daughter"
-                self.prune_left_most_parent(node.right_daughter, path = updated_path)
+                path.append("r")
+                self.prune_left_most_parent(node.right_daughter, path)
         else:
-            updated_path = path + ".left_daughter"
-            self.prune_left_most_parent(node.left_daughter)
+            path.append("l")
+            self.prune_left_most_parent(node.left_daughter, path)
 
-        return node
+        return path, node
          
 
     def update_trained_tree(self, tree1, tree2):
@@ -68,11 +68,22 @@ class TreePruning:
         node = pre_pruned_tree
         node_is_parent = (node.left_daughter.is_leaf == True) and (node.right_daughter.is_leaf == True)
         path, post_pruned_tree = self.prune_left_most_parent(pre_pruned_tree)
+        path_copy = path.copy()
 
         #update left and right daughters to none and isleaf.yes
         #do not know how to concatenate node and path (node+path).isleaf = True
         if self.update_trained_tree(tree1 = pre_pruned_tree, tree2 = post_pruned_tree):
-            pass
+            while len(path_copy) != 0:
+                for i,instruction in enumerate(path):
+                    if instruction == "l":
+                        pre_pruned_tree = pre_pruned_tree.left_daughter
+                    else: 
+                        pre_pruned_tree = pre_pruned_tree.right_daughter
+
+                    path_copy.pop(i)
+        
+            pre_pruned_tree.is_leaf = True
+
         while post_pruned_tree is not node_is_parent:
             pre_pruned_tree = post_pruned_tree
             self.prune_tree(pre_pruned_tree=post_pruned_tree)
