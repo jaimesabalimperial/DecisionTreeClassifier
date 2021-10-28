@@ -1,3 +1,4 @@
+from numpy import deprecate_with_doc
 from evaluation.evaluation_metrics import EvaluationMetrics
 from data_manipulation.load_dataset import load_dataset
 from data_manipulation.split_dataset import split_dataset
@@ -15,21 +16,51 @@ class TreePruning:
         self.y_train = y_train
         self.y_test = y_test
 
+    
+    def query_update_tree(self,node_to_find, node):
+
+        if node is None:
+            return    
+        else:
+            pass
+
+        if node.left is not None:
+            self.query_tree(node.left)
+
+        if (node.depth == node_to_find.depth) and (node.feature_num == node_to_find.feature_num) and (node.split_val == node_to_find.split_val):
+            node.left_daughter = None
+            node.right_daughter = None
+            node.is_leaf = True
+            return node
+
+        if node.right is not None:
+            self.query_tree(node.right)
+
+    checked_nodes =[]
+
     def prune_left_most_parent(self, node, path=[]):
         ''' Find next deepest, left most node for pruning. Track trained tree in parallel to 
             potentially update its node
         '''
-        if node.left_daughter.is_leaf == True:
-            if node.right_daughter.is_leaf == True:
+        if node.left_daughter.is_leaf == True and node.left_daughter not in checked_nodes:
+            if node.right_daughter.is_leaf == True and node not in checked_nodes:
+                # Add left and right data
+                node_to_find = node()
+                node_to_find.depth = node.depth 
+                node_to_find.feature_num = node.feature_num
+                node_to_find.split_val = node.split_val
                 node.left_daughter = None
                 node.right_daughter = None
                 node.is_leaf = True
+                checked_nodes.append(node)
             else:
                 path.append("r")
                 self.prune_left_most_parent(node.right_daughter, path)
-        else:
+        elif node.left_daughter.is_leaf == False and node.left_daughter not in checked_nodes:
             path.append("l")
             self.prune_left_most_parent(node.left_daughter, path)
+        else:
+            return None
 
         return path, node
          
@@ -44,7 +75,7 @@ class TreePruning:
         tree_accuracy_post_pruning= metrics.compute_accuracy(self.y_test, y_predicted_test_post_pruning)
         tree_accuracy_pre_pruning = metrics.compute_accuracy(self.y_test,y_predicted_test_pre_pruning) 
 
-        return  tree_accuracy_post_pruning > tree_accuracy_pre_pruning
+        return  tree_accuracy_post_pruning >= tree_accuracy_pre_pruning
 
     def predict_tree(self, X, tree):
         """
@@ -62,31 +93,23 @@ class TreePruning:
         return predicted_values
         
 
-    def prune_tree(self):
+    def prune_tree(self, pre_pruned_tree = self.trained_tree):
         """"""
-        pre_pruned_tree = self.trained_tree
-        node = pre_pruned_tree
-        node_is_parent = (node.left_daughter.is_leaf == True) and (node.right_daughter.is_leaf == True)
-        path, post_pruned_tree = self.prune_left_most_parent(pre_pruned_tree)
-        path_copy = path.copy()
-
-        #update left and right daughters to none and isleaf.yes
-        #do not know how to concatenate node and path (node+path).isleaf = True
-        if self.update_trained_tree(tree1 = pre_pruned_tree, tree2 = post_pruned_tree):
-            while len(path_copy) != 0:
-                for i,instruction in enumerate(path):
-                    if instruction == "l":
-                        pre_pruned_tree = pre_pruned_tree.left_daughter
-                    else: 
-                        pre_pruned_tree = pre_pruned_tree.right_daughter
-
-                    path_copy.pop(i)
         
-            pre_pruned_tree.is_leaf = True
+        #pre_pruned_tree = self.trained_tree
+        #node = pre_pruned_tree
+        #node_is_parent = (node.left_daughter.is_leaf == True) and (node.right_daughter.is_leaf == True)
+        if self.prune_left_most_parent(pre_pruned_tree) == None:
+            return self.trained_tree
+        else:
+            post_pruned_tree = self.prune_left_most_parent(pre_pruned_tree)
 
-        while post_pruned_tree is not node_is_parent:
-            pre_pruned_tree = post_pruned_tree
-            self.prune_tree(pre_pruned_tree=post_pruned_tree)
+            #update left and right daughters to none and isleaf.yes
+            #do not know how to concatenate node and path (node+path).isleaf = True
+            if self.update_trained_tree(tree1 = pre_pruned_tree, tree2 = post_pruned_tree):
+                self.query_update_tree(node_to_find=post_pruned_tree, node=self.trained_tree)  
+
+            self.prune_tree()
  
 
         
