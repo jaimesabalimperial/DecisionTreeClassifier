@@ -1,4 +1,4 @@
-from random import randrange, seed, sample, randint
+from random import seed, sample
 import numpy as np
 
 seed(60012) #set random seed 
