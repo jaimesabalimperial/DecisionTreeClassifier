@@ -1,6 +1,6 @@
 import numpy as np
 
-def load_dataset(filepath, not_noisy = True):
+def load_dataset(filepath, clean = True):
     """ Read in the dataset from the specified filepath
 
     Args:
@@ -18,7 +18,7 @@ def load_dataset(filepath, not_noisy = True):
     """
     x = []
     y = []
-    if not_noisy:
+    if clean:
         for line in open(filepath):
             if line.strip() != "":  # handle empty rows in file
                 row = line.rstrip().split('\t')
