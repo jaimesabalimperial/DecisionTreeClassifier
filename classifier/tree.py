@@ -5,6 +5,7 @@ from classifier.node import Node
 class DecisionTreeClassifier:
     def __init__(self, max_depth=None):
         self.max_depth = max_depth
+        self.depth = 0
         self.trained_tree = None
 
     def calculate_H(self, y):

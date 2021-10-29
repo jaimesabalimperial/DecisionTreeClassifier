@@ -8,13 +8,15 @@ class TreePruning:
         #make initial prediction on test set for clean data
         filepath = 'wifi_db/clean_dataset.txt'
         X, y = load_dataset(filepath)
-        x_train, x_test, y_train, y_test = split_dataset(X, y, test_proportion = 0.2)  ## change the split
-        
+        x_train, x_test, y_train, y_val = split_dataset(X, y, test_proportion = 0.2)  ## change the split
+        x_train, x_val, y_train, y_val = split_dataset(X, y, test_proportion = 0.2)  ## change the split
+
+
         self.trained_tree = trained_tree
         self.x_train = x_train
-        self.x_test = x_test
+        self.x_test = x_val
         self.y_train = y_train
-        self.y_test = y_test
+        self.y_test = y_val
 
     
     def query_update_tree(self,node_to_find, node):
@@ -70,10 +72,10 @@ class TreePruning:
         """
         metrics = EvaluationMetrics() 
 
-        y_predicted_test_pre_pruning = self.predict_tree(self.x_test, tree = tree1)
-        y_predicted_test_post_pruning = self.predict_tree(self.x_test, tree = tree2)
-        tree_accuracy_post_pruning= metrics.compute_accuracy(self.y_test, y_predicted_test_post_pruning)
-        tree_accuracy_pre_pruning = metrics.compute_accuracy(self.y_test,y_predicted_test_pre_pruning) 
+        y_predicted_val_pre_pruning = self.predict_tree(self.x_val, tree = tree1)
+        y_predicted_val_post_pruning = self.predict_tree(self.x_val, tree = tree2)
+        tree_accuracy_post_pruning= metrics.compute_accuracy(self.y_test, y_predicted_val_post_pruning)
+        tree_accuracy_pre_pruning = metrics.compute_accuracy(self.y_test,y_predicted_val_pre_pruning) 
 
         return  tree_accuracy_post_pruning >= tree_accuracy_pre_pruning
 

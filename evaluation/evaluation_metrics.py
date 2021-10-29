@@ -1,5 +1,5 @@
 import numpy as np
-from evaluation.split_to_k_folds import create_data_k_fold
+from evaluation.cross_validation import CrossValidation
 from classifier.tree import DecisionTreeClassifier
 
 
@@ -7,6 +7,7 @@ class EvaluationMetrics:
     def __init__(self, y, y_predicted):
         self.y = y
         self.y_predicted = y_predicted
+        self.k = None
 
     def compute_confusion_matrix(self):
         """
@@ -42,47 +43,57 @@ class EvaluationMetrics:
             f1_score.append(curr_f1)
         return precision, recall, f1_score
 
+    def compute_CV_results(self, X_train, y_train, X_test, y_test):
+                #initialise metric lists
+        confusion_matrices = []
+        accuracies_list = []
+        precisions_list = []
+        recalls_list = []
+        f1_scores = []
 
-def k_fold_evaluation(X, y, folds=10):
-    """
-    """
-    X_train, y_train, X_test, y_test = create_data_k_fold(X, y, folds)
+        for i in range(self.k):
+            # build tree
+            tree_clf = DecisionTreeClassifier(max_depth=100)
+            tree_clf.fit(X_train[i], y_train[i])
+            y_test_predicted = tree_clf.predict(X_test[i])
+            metrics = EvaluationMetrics(y_test[i], y_test_predicted)
+            confusion_mat = metrics.compute_confusion_matrix() 
+            accuracy = metrics.compute_accuracy()
+            precision, recall, f1_score = metrics.compute_precision_recall_f1()
 
-    #initialise metric lists
-    confusion_matrices = []
-    accuracies_list = []
-    precisions_list = []
-    recalls_list = []
-    f1_scores = []
+            confusion_matrices.append(np.array(confusion_mat))
+            accuracies_list.append(accuracy)
+            precisions_list.append(precision)
+            recalls_list.append(recall)
+            f1_scores.append(f1_score)
 
-    for i in range(folds):
-        # build tree
-        tree_clf = DecisionTreeClassifier(max_depth=100)
-        tree_clf.fit(X_train[i], y_train[i])
-        y_test_predicted = tree_clf.predict(X_test[i])
-        metrics = EvaluationMetrics(y_test[i], y_test_predicted)
-        confusion_mat = metrics.compute_confusion_matrix() 
-        accuracy = metrics.compute_accuracy()
-        precision, recall, f1_score = metrics.compute_precision_recall_f1()
+        #compute average of all folds
+        total_confusion_mat = sum(confusion_matrices)
+        average_accuracy = np.mean(accuracies_list)
+        average_precision = list(map(np.mean, zip(*precisions_list)))
+        average_recall = list(map(np.mean, zip(*recalls_list)))
+        average_f1_score = list(map(np.mean, zip(*f1_scores)))
 
-        confusion_matrices.append(np.array(confusion_mat))
-        accuracies_list.append(accuracy)
-        precisions_list.append(precision)
-        recalls_list.append(recall)
-        f1_scores.append(f1_score)
+        print(f"\nThe total confusion matrix is: \n {total_confusion_mat}")
+        print(f"\nThe average accuracy is: \n{average_accuracy}")
+        print(f"\nThe average precision for each class is: \n{average_precision}")
+        print(f"\nThe average recall for each class is: \n{average_recall}")
+        print(f"\nThe average f1 score for each class is: \n{average_f1_score}")
 
-    #compute average of all folds
-    total_confusion_mat = sum(confusion_matrices)
-    average_accuracy = np.mean(accuracies_list)
-    average_precision = list(map(np.mean, zip(*precisions_list)))
-    average_recall = list(map(np.mean, zip(*recalls_list)))
-    average_f1_score = list(map(np.mean, zip(*f1_scores)))
+        
 
-    print(f"\nThe total confusion matrix is: \n {total_confusion_mat}")
-    print(f"\nThe average accuracy is: \n{average_accuracy}")
-    print(f"\nThe average precision for each class is: \n{average_precision}")
-    print(f"\nThe average recall for each class is: \n{average_recall}")
-    print(f"\nThe average f1 score for each class is: \n{average_f1_score}")
 
+    def evaluate_CV(self, X, y, nested_CV = False):
+        """
+        """
+        cv = CrossValidation(X, y)
+        self.k = cv.folds
+
+        if nested_CV == False:
+            X_train, y_train, X_test, y_test = cv.generate_CV_data()
+            self.compute_CV_results(X_train, y_train, X_test, y_test)
+        else: 
+            pass
+        
 
 
