@@ -6,3 +6,5 @@ class Node:
         self.right_daughter = None
         self.predicted_room = None
         self.is_leaf = False
+        self.parent = None
+        self.depth = 0
