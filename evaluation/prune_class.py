@@ -1,7 +1,8 @@
-
+from evaluation.evaluation_metrics import EvaluationMetrics
+import numpy as np
 
 class TreePruning:
-    def __init__(self, trained_tree, x_train, x_test, y_train, y_test, metrics):
+    def __init__(self, trained_tree, x_train, x_test, y_train, y_test):
         self.trained_tree = trained_tree
         self.try_prune_tree = trained_tree
         self.x_train = x_train
@@ -10,7 +11,9 @@ class TreePruning:
         self.y_test = y_test
         self.leaf_list = []
         self.sorted_leaf = []
-        self.metrics = metrics
+        self.y_predicted_pre_pruning = None
+        self.y_predicted_post_pruning = None
+        self.metrics = EvaluationMetrics(self.y_test, self.y_predicted_pre_pruning)
 
     def find_node(self, node, target_node):
         if node == None:
@@ -46,7 +49,7 @@ class TreePruning:
         for node in self.leaf_list:
             depth_list.append(node.depth)
         
-        depth_list = argsort(np.array(depth_list))[::-1]
+        depth_list = np.argsort(np.array(depth_list))[::-1]
         self.sorted_leaf = [self.leaf_list[i] for i in depth_list]
 
     def try_prune(self):
@@ -60,12 +63,12 @@ class TreePruning:
     def update_trained_tree(self, tree1, tree2):
         """
         """
-        #metrics = EvaluationMetrics() 
-
         y_predicted_test_pre_pruning = self.predict_tree(self.x_test, tree = tree1)
         y_predicted_test_post_pruning = self.predict_tree(self.x_test, tree = tree2)
-        tree_accuracy_post_pruning= metrics.compute_accuracy(self.y_test, y_predicted_test_post_pruning)
-        tree_accuracy_pre_pruning = metrics.compute_accuracy(self.y_test,y_predicted_test_pre_pruning) 
+        self.y_predicted_pre_pruning = y_predicted_test_pre_pruning
+        self.y_predicted_post_pruning = y_predicted_test_post_pruning
+        tree_accuracy_post_pruning= self.metrics.compute_accuracy(self.y_test, self.y_predicted_test_post_pruning)
+        tree_accuracy_pre_pruning = self.metrics.compute_accuracy(self.y_test, self.y_predicted_test_pre_pruning) 
 
         return  tree_accuracy_post_pruning >= tree_accuracy_pre_pruning
 

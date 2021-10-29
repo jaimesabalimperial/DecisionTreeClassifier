@@ -4,9 +4,9 @@ from classifier.tree import DecisionTreeClassifier
 
 
 class EvaluationMetrics:
-    def __init__(self, y, y_predicted):
-        self.y = y
-        self.y_predicted = y_predicted
+    def __init__(self):
+        self.y = None
+        self.y_predicted = None
         self.k = None
 
     def compute_confusion_matrix(self):
@@ -55,11 +55,11 @@ class EvaluationMetrics:
             # build tree
             tree_clf = DecisionTreeClassifier(max_depth=100)
             tree_clf.fit(X_train[i], y_train[i])
-            y_test_predicted = tree_clf.predict(X_test[i])
-            metrics = EvaluationMetrics(y_test[i], y_test_predicted)
-            confusion_mat = metrics.compute_confusion_matrix() 
-            accuracy = metrics.compute_accuracy()
-            precision, recall, f1_score = metrics.compute_precision_recall_f1()
+            self.y_predicted = tree_clf.predict(X_test[i])
+            self.y = y_test[i]
+            confusion_mat = self.compute_confusion_matrix() 
+            accuracy = self.compute_accuracy()
+            precision, recall, f1_score = self.compute_precision_recall_f1()
 
             confusion_matrices.append(np.array(confusion_mat))
             accuracies_list.append(accuracy)
