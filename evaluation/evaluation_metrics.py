@@ -43,6 +43,21 @@ class EvaluationMetrics:
             f1_score.append(curr_f1)
         return precision, recall, f1_score
 
+    def compute_averaged_f1(self):
+        confusion_matrix = self.compute_confusion_matrix()
+        precision = []
+        recall = []
+        f1_score = []
+        for room in range(len(list(set(self.y)))):
+            try:
+                precision.append(confusion_matrix[room][room] / np.array(confusion_matrix).sum(axis=1)[room])
+                recall.append(confusion_matrix[room][room] / np.array(confusion_matrix).sum(axis=0)[room])
+                curr_f1 = (2 * precision[room] * recall[room]) / (precision[room] + recall[room])
+            except ZeroDivisionError:
+                curr_f1 = 0
+            f1_score.append(curr_f1)
+        return sum(f1_score)/len(f1_score)
+
     def compute_CV_results(self, X_train, y_train, X_test, y_test):
                 #initialise metric lists
         confusion_matrices = []
@@ -79,9 +94,6 @@ class EvaluationMetrics:
         print(f"\nThe average precision for each class is: \n{average_precision}")
         print(f"\nThe average recall for each class is: \n{average_recall}")
         print(f"\nThe average f1 score for each class is: \n{average_f1_score}")
-
-        
-
 
     def evaluate_CV(self, X, y, nested_CV = False):
         """

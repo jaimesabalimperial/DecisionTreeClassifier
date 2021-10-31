@@ -149,7 +149,7 @@ class DecisionTreeClassifier:
         predicted_values = []
         for sample in X:
             node = self.trained_tree
-            while not node.is_leaf:
+            while not node.is_leaf and node.left_daughter is not None and node.right_daughter is not None:
                 if sample[node.feature_num] < node.split_val:
                     node = node.left_daughter
                 else:
