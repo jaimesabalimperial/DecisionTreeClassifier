@@ -91,9 +91,9 @@ class TreePruning:
 
 if __name__ == '__main__':
     #make initial prediction on test set for clean data
-    filepath = 'wifi_db/clean_dataset.txt'
+    filepath = 'wifi_db/noisy_dataset.txt'
     #filepath = 'wifi_db/trial_dataset.txt'
-    X, y = load_dataset(filepath)
+    X, y = load_dataset(filepath, clean=False)
     X_train, X_test, y_train, y_test = split_dataset(X, y, test_proportion=0.2)  ## change the split
     tree_clf = DecisionTreeClassifier(max_depth=100)
     tree_clf.fit(X_train, y_train)

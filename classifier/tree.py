@@ -123,6 +123,7 @@ class DecisionTreeClassifier:
             node.left_daughter.parent = node
             node.right_daughter.parent = node
             node.depth = depth
+            node.predicted_room = self.find_predicted_room(y) #predict a room for leaf node
         else: 
             node.is_leaf = True #if max depth or only one class shown in labels, set the current node as a leaf node
             node.predicted_room = self.find_predicted_room(y) #predict a room for leaf node
