@@ -1,123 +1,66 @@
-from random import seed, sample
 import numpy as np
+from numpy.random import default_rng
 
-seed(60012) #set random seed 
 
 class CrossValidation:
-    def __init__(self, X, y):
+
+    def __init__(self):
+        seed = 60012 #set random seed 
+        rg = default_rng(seed)
         self.folds = 10
-        self.testval_folds = int(0.1*self.folds)
-        self.validation = False
-        self.X = X   
-        self.y = y
+        self.random_generator = rg
 
-    def get_random_folded_data(self, random_fold_indices):
-        """"""
-        test_indices_list = [random_fold_indices[i] for i in range(self.testval_folds)]
-        test_data = []
-        test_labels = []
-        for fold in test_indices_list:
-            test_data.append(self.X[fold])
-            test_labels.append(self.y[fold])
+    def k_fold_split(self, x, y):
+        """ Split n_instances into n mutually exclusive splits at random.
 
-        trainval_indices_list = [random_fold_indices[i] for i in range(self.testval_folds, self.folds)]
-        trainval_data = []
-        trainval_labels = []
-        for fold in trainval_indices_list:
-            trainval_data.append(self.X[fold])
-            trainval_labels.append(self.y[fold])
+        Args:
+            n_splits (int): Number of splits
+            n_instances (int): Number of instances to split
+            random_generator (np.random.Generator): A random generator
 
-        #first split of test data and labels
-        test_data = np.concatenate(test_data)
-        test_labels  = np.concatenate(test_labels)
+        Returns:
+            list: a list (length n_splits). Each element in the list should contain a 
+                numpy array giving the indices of the instances in that split.
+        """
 
-        trainval_data = np.array(trainval_data)
-        trainval_labels = np.array(trainval_labels)
+        # generate a random permutation of indices from 0 to n_instances
+        shuffled_indices = self.random_generator.permutation(len(x))
 
-        return test_data, test_labels, trainval_data, trainval_labels
+        # split shuffled indices into almost equal sized splits
+        split_indices = np.array_split(shuffled_indices, self.folds)
 
-    def split_to_k_folds(self):
-        """"""
-        random_fold_indices = []
-        fold_size = int(len(self.X) / self.folds)
+        return split_indices
 
-        for _ in range(self.folds):
-            if len(random_fold_indices) != 0:
-                current_chosen_indices = [idx for fold in random_fold_indices for idx in fold]
-                available_indices = [i for i in range(len(self.X)) if i not in current_chosen_indices]
-            else: 
-                available_indices = [i for i in range(len(self.X))]
-            
-            random_fold_indices.append(sample(available_indices, fold_size)) #get random indices within range of data for each fold
+    def train_test_k_fold(self, x, y):
+        """ Generate train and test indices at each fold.
         
+        Args:
+            n_folds (int): Number of folds
+            n_instances (int): Total number of instances
+            random_generator (np.random.Generator): A random generator
 
-        if self.validation:
-            test_data, test_labels, trainval_data, trainval_labels = self.get_random_folded_data(random_fold_indices)
-            train_data, train_labels, val_data, val_labels = self.iterated_folds(trainval_data, trainval_labels)
+        Returns:
+            list: a list of length n_folds. Each element in the list is a list (or tuple) 
+                with two elements: a numpy array containing the train indices, and another 
+                numpy array containing the test indices.
+        """
 
-            return train_data, train_labels, val_data, val_labels, test_data, test_labels
+        # split the dataset into k splits
+        split_indices = self.k_fold_split(x, y)
 
-        else: 
-            k_folded_data = [self.X[fold] for fold in random_fold_indices]
-            k_folded_labels = [self.y[fold] for fold in random_fold_indices]
+        folds = []
+        for k in range(self.folds):
+            # pick k as test
+            test_indices = split_indices[k]
 
-            return k_folded_data, k_folded_labels
+            # combine remaining splits as train
+            # this solution is fancy and worked for me
+            # feel free to use a more verbose solution that's more readable
+            train_indices = np.hstack(split_indices[:k] + split_indices[k+1:])
 
-    def iterated_folds(self, folded_data, folded_labels):
-        """"""
-        majority_data, majority_labels = [], []
-        minority_data, minority_labels = folded_data, folded_labels
+            folds.append([train_indices, test_indices])
 
-        if self.validation:
-            num_iterations = int(self.folds - self.testval_folds)
-        else: 
-            num_iterations = self.folds
+        return folds
 
-        for i in range(num_iterations):
-            folded_data_copy = folded_data.copy()
-            folded_labels_copy = folded_labels.copy()
-            del folded_data_copy[i]
-            del folded_labels_copy[i]
-            majority_data.append(np.array(np.concatenate(folded_data_copy)))
-            majority_labels.append(np.array(np.concatenate(folded_labels_copy)))
 
-        return majority_data, majority_labels, minority_data, minority_labels
-
-    def generate_CV_data(self):
-        """"""
-        self.validation = False 
-
-        k_folded_data, k_folded_labels = self.split_to_k_folds()
-
-        train_data, train_labels, test_data, test_labels = self.iterated_folds(k_folded_data, k_folded_labels)
-
-        return train_data, train_labels, test_data, test_labels
-
-    def nested_CV_data(self):
-        """"""
-        folded_data, folded_labels = self.split_to_k_folds()
-        folded_data_copy = folded_data.copy()
-        folded_labels_copy = folded_labels.copy()
-
-        #10/10/80 (test/val/train)
-        #have 1 fold worth of test data, and 9 folds of validation + 8*9 folds of training data
-        self.validation = True
-
-        test_data, test_labels = [], [], 
-        train_data, train_labels, val_data, val_labels = {}, {}, {}, {}
-
-        for i in range(self.folds):
-            test_data.append(folded_data[i])
-            test_labels.append(folded_labels[i])
-
-            folded_data_copy = [folded_data[i] for j in range(self.folds) if j != i]
-            folded_labels_copy = [folded_labels[i] for j in range(self.folds) if j != i]
-
-            train_data_i, train_labels_i, val_data_i, val_labels_i = self.iterated_folds(folded_data_copy, folded_labels_copy)
-
-            train_data[i] = train_data_i
-            train_labels[i] = train_labels_i    
-            val_data[i] = val_data_i
-            val_labels[i] = val_labels_i
-
-        return train_data, train_labels, val_data, val_labels, test_data, test_labels
+    
