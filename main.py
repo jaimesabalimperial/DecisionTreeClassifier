@@ -1,10 +1,16 @@
+import sys
 from evaluation.evaluation_metrics import EvaluationMetrics
 from classifier.tree import DecisionTreeClassifier
 from classifier.visualiser import VisualiseTree
 from data_manipulation.load_dataset import load_dataset
 
-def print_results(data = "Clean"):
+def print_results(data, pruning):
     
+    initial_message = {("Clean", True): "Performing nested cross-validation on pruned tree classifier trained on clean data:\n",
+                       ("Clean", False): "Performing cross-validation on tree classifier trained on clean data:\n",
+                       ("Noisy", True): "Performing nested cross-validation on pruned tree classifier trained on noisy data:\n",
+                       ("Noisy", False): "Performing cross-validation on tree classifier trained on noisy data:\n",
+                      }
     #evaluation class
     metrics = EvaluationMetrics()
 
@@ -18,16 +24,44 @@ def print_results(data = "Clean"):
         filepath = 'wifi_db/noisy_dataset.txt'
         x, y = load_dataset(filepath, clean = False)
 
-    #perform cross-validation evaluation pre-pruning
-    metrics.evaluate_CV(x, y, pruning=False)
+    print(initial_message[(data,pruning)])
 
-    #perform cross-validation evaluation post-pruning
-    metrics.evaluate_CV(x, y, pruning=True)
+    if pruning:
+        #perform nested cross-validation for pruned trees
+        metrics.evaluate_CV(x, y, pruning=True)
+    else:
+        #perform cross-validation evaluation without pruning
+        metrics.evaluate_CV(x, y, pruning=False)
 
 
 if __name__ == '__main__':
+
+    clean_argv_list = ["clean", "Clean", "CLEAN", "c", "C"]
+    noisy_argv_list = ["noisy", "Noisy", "NOISY", "n", "N"]
+    pruning_argv_list = ["prune", "pruning", "Prune", "p", "P"]
     
-    command = "v"
+
+    if sys.argv[1] in noisy_argv_list:
+        if len(list(sys.argv)) == 2:
+            print_results(data = "Noisy", pruning = False)
+        elif sys.argv[2] in pruning_argv_list:
+            print_results(data = "Noisy", pruning = True)
+
+    elif sys.argv[1] in clean_argv_list:
+        if len(list(sys.argv)) == 2:
+            print_results(data = "Clean", pruning = False)
+
+        elif sys.argv[2] in pruning_argv_list:
+            print_results(data = "Clean", pruning = True)
+    else:
+        print("Command not understood, examples of acceptable commands are: \n")
+        print("python3 main.py clean -----> perform cross-validation on tree classifier for clean dataset.\n")
+        print("python3 main.py clean prune -----> perform nested cross-validation on pruned tree classifier for clean dataset.\n")
+        print("python3 main.py noisy -----> perform cross-validation on tree classifier for noisy dataset.\n")
+        print("python3 main.py noisy prune -----> perform nested cross-validation on pruned tree classifier for noisy dataset.\n")
+
+
+"""    command = "q"
 
     if command == "v":
         #make initial prediction on test set for clean data
@@ -44,8 +78,4 @@ if __name__ == '__main__':
 
         visualiser.visualise(tree)
 
-    else:
-        print_results(data = "Clean")
-
-        print_results(data = "Noisy")
-
+    else:"""

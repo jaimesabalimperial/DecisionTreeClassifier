@@ -105,7 +105,7 @@ class EvaluationMetrics:
     def print_metrics(self, final_average_metrics, pruning):
         """"""
         # print final metrics
-        print(f"\nThe total confusion matrix is: \n {final_average_metrics[0]}")
+        print(f"\nThe total normalised confusion matrix is: \n {final_average_metrics[0]}")
         print(f"\nThe average accuracy is: \n{final_average_metrics[1]}")
         print(f"\nThe average precision for each class is: \n{final_average_metrics[2]}")
         print(f"\nThe average recall for each class is: \n{final_average_metrics[3]}")
@@ -130,8 +130,9 @@ class EvaluationMetrics:
             folds = 10 
             cv.folds = folds
 
+            print("Currently in: \n")
             for i, (train_indices, test_indices) in enumerate(cv.train_test_k_fold(x, y)):
-                print("\nFold ", i)
+                print("Fold #", i)
                 # get the dataset from the correct splits
                 x_train = x[train_indices, :]
                 y_train = y[train_indices]
@@ -170,13 +171,13 @@ class EvaluationMetrics:
             # Outer CV (10-fold)
             outer_folds = 10 
             cv.folds = outer_folds
+            print("Currently in: \n")
             for i, (trainval_indices, test_indices) in enumerate(cv.train_test_k_fold(x, y)):
-                print("\nOUTER FOLD ", i, "\n")
+                print("OUTER FOLD #", i, "\n")
                 x_trainval = x[trainval_indices, :]
                 y_trainval = y[trainval_indices]
                 x_test = x[test_indices, :]
                 y_test = y[test_indices]
-                self.y = y_test
 
                 # Pre-split data for inner cross-validation (9 inner folds)
                 inner_folds = 9
@@ -187,7 +188,7 @@ class EvaluationMetrics:
 
                 # Inner CV (10-fold again)  
                 for j, (train_indices, val_indices) in enumerate(splits):
-                    print("inner fold ", j)
+                    print("Inner Fold #", j)
                     #retrieve training and validation sets from random indices (splits)
                     x_train = x_trainval[train_indices, :]
                     y_train = y_trainval[train_indices]
@@ -204,8 +205,9 @@ class EvaluationMetrics:
                     max_depth_before, max_depth_after, post_pruned = tree_prune.prune_tree()
 
                     self.y_predicted = tree_prune.predict_tree(x_test, post_pruned) #evaluate pruned tree on test set
+                    self.y = y_test
                     
-                    #evaluation metrics for each inner fold
+                    #evaluation metrics for each inner fold 
                     confusion_mat = self.get_confusion_matrix() 
                     accuracy = self.get_accuracy()
                     precision, recall, f1_score = zip(*self.get_precision_recall_f1())
