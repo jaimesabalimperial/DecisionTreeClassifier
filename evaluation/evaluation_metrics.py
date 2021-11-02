@@ -43,20 +43,20 @@ class EvaluationMetrics:
         #find precision, recall, and labels for all classes
         for room in range(len(list(set(self.y)))):
 
-            #all cases predicted to be negative, want to maintain information by inputting nan
+            #all cases predicted to be negative, want to maintain information by inputting np.nan
             try: 
                 precision = confusion_matrix[room][room] / np.array(confusion_matrix).sum(axis=1)[room]
             except ZeroDivisionError:
                 precision = np.nan
 
-            #no positives in input data, want to maintain information by inputting nan
+            #no positives in input data, want to maintain information by inputting np.nan
             try: 
                 recall = confusion_matrix[room][room] / np.array(confusion_matrix).sum(axis=0)[room]
             except ZeroDivisionError:
                 recall = np.nan
 
-            #f1_score is only nan when model had no opportunity to identify true positives, but it had no false
-            #negatives, else it is zero
+            #f1_score is only nan when model had no opportunity to identify true positives, 
+            #but it had no false negatives, else it is zero
             try: 
                 curr_f1 = (2 * precision * recall) / (precision + recall)
 
@@ -218,7 +218,7 @@ class EvaluationMetrics:
                     inner_metrics["Max Depth Before"].append(max_depth_before)
                     inner_metrics["Max Depth After"].append(max_depth_after)
 
-                #calculate average metrics for cross-validation
+                #calculate final average metrics for nested cross-validation from averages of inner folds
                 avg_inner_metrics =  self.average_metrics(inner_metrics, pruning)
 
                 outer_metrics["Confusion Matrices"].append(avg_inner_metrics[0])

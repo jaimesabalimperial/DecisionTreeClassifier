@@ -5,7 +5,7 @@ from classifier.node import Node
 class DecisionTreeClassifier:
     def __init__(self, max_depth=None):
         self.max_depth = max_depth
-        self.depth = 0
+        self.total_depth = None
         self.trained_tree = None
 
     def calculate_H(self, y):
@@ -22,6 +22,7 @@ class DecisionTreeClassifier:
         classes = np.unique(y)
         class_probabilities = [np.count_nonzero(y == room)/len(y) for room in classes]
         H = np.sum([-p*np.log2(p) for p in class_probabilities])
+
         return H
 
     def find_split(self, X, y):
@@ -113,9 +114,12 @@ class DecisionTreeClassifier:
 
         # split recursively
         if depth < self.max_depth and not self.has_pure_class(y):
+            #find best split for current node
             feature_idx, splitting_indices, threshold = self.find_split(X, y)
             X_left, y_left = X[splitting_indices[0],], y[splitting_indices[0],]
             X_right, y_right = X[splitting_indices[1],], y[splitting_indices[1],]
+
+            #update node attributes accordingly
             node.feature_num = feature_idx
             node.split_val = threshold
             node.left_daughter = self.grow_tree(X_left, y_left, depth + 1)
@@ -124,10 +128,17 @@ class DecisionTreeClassifier:
             node.right_daughter.parent = node
             node.depth = depth
             node.predicted_room = self.find_predicted_room(y)
+
         else: 
+            #update current maximum depth of the tree
+            if depth > node.max_depth: 
+                self.total_depth = depth
+
             node.is_leaf = True #if max depth or only one class shown in labels, set the current node as a leaf node
             node.predicted_room = self.find_predicted_room(y) #predict a room for leaf node
             node.depth = depth
+        
+        node.max_depth = self.total_depth
 
         return node
 
