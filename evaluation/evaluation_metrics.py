@@ -79,12 +79,17 @@ class EvaluationMetrics:
             return (total_confusion_mat, average_accuracy, average_precision, 
                     average_recall , average_f1_score, average_max_depth_before, average_max_depth_after)
 
-    def compute_CV_results(self, cv, x, y, pruning):
+    def compute_CV_results(self, x, y, pruning):
         """
         """
+        cv = CrossValidation() #retrieve object to perform cross-validation 
+
         if not pruning:
             #initialise metric lists
             metrics = {"Confusion Matrices": [], "Accuracies": [], "Precisions": [], "Recalls": [], "F1 Scores": []}
+
+            folds = 10 
+            cv.folds = folds
 
             for i, (train_indices, test_indices) in enumerate(cv.train_test_k_fold(x, y)):
                 # get the dataset from the correct splits
@@ -119,6 +124,8 @@ class EvaluationMetrics:
                              "Recalls": [], "F1 Scores": [],  "Max Depth Before": [], "Max Depth After": []}
 
             # Outer CV (10-fold)
+            outer_folds = 10 
+            cv.folds = outer_folds
             for i, (trainval_indices, test_indices) in enumerate(cv.train_test_k_fold(x, y)):
                 print("\nOuter Fold ", i)
                 x_trainval = x[trainval_indices, :]
@@ -127,7 +134,9 @@ class EvaluationMetrics:
                 y_test = y[test_indices]
                 self.y = y_test
 
-                # Pre-split data for inner cross-validation 
+                # Pre-split data for inner cross-validation (9 inner folds)
+                inner_folds = 9
+                cv.folds = inner_folds
                 splits = cv.train_test_k_fold(x_trainval, y_trainval)
 
                 
@@ -203,5 +212,4 @@ class EvaluationMetrics:
     def evaluate_CV(self, x, y, pruning = False):
         """
         """
-        cv = CrossValidation()
-        self.compute_CV_results(cv, x, y, pruning)
+        self.compute_CV_results(x, y, pruning)

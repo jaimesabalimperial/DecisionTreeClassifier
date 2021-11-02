@@ -7,7 +7,7 @@ class CrossValidation:
     def __init__(self):
         seed = 60012 #set random seed 
         rg = default_rng(seed)
-        self.folds = 10
+        self.folds = None
         self.random_generator = rg
 
     def k_fold_split(self, x, y):
