@@ -6,10 +6,10 @@ from data_manipulation.load_dataset import load_dataset
 
 def print_results(data, pruning):
     
-    initial_message = {("Clean", True): "Performing nested cross-validation on pruned tree classifier trained on clean data:\n",
-                       ("Clean", False): "Performing cross-validation on tree classifier trained on clean data:\n",
-                       ("Noisy", True): "Performing nested cross-validation on pruned tree classifier trained on noisy data:\n",
-                       ("Noisy", False): "Performing cross-validation on tree classifier trained on noisy data:\n",
+    initial_message = {("Clean", True): "\nPerforming nested cross-validation on pruned tree classifier trained on clean data:\n",
+                       ("Clean", False): "\nPerforming cross-validation on tree classifier trained on clean data:\n",
+                       ("Noisy", True): "\nPerforming nested cross-validation on pruned tree classifier trained on noisy data:\n",
+                       ("Noisy", False): "\nPerforming cross-validation on tree classifier trained on noisy data:\n",
                       }
     #evaluation class
     metrics = EvaluationMetrics()
@@ -54,28 +54,8 @@ if __name__ == '__main__':
         elif sys.argv[2] in pruning_argv_list:
             print_results(data = "Clean", pruning = True)
     else:
-        print("Command not understood, examples of acceptable commands are: \n")
+        print("\nCommand not understood, examples of acceptable commands are: \n")
         print("python3 main.py clean -----> perform cross-validation on tree classifier for clean dataset.\n")
         print("python3 main.py clean prune -----> perform nested cross-validation on pruned tree classifier for clean dataset.\n")
         print("python3 main.py noisy -----> perform cross-validation on tree classifier for noisy dataset.\n")
         print("python3 main.py noisy prune -----> perform nested cross-validation on pruned tree classifier for noisy dataset.\n")
-
-
-"""    command = "q"
-
-    if command == "v":
-        #make initial prediction on test set for clean data
-        filepath = 'wifi_db/clean_dataset.txt'
-        x, y = load_dataset(filepath, clean = True)
-
-        tree_clf = DecisionTreeClassifier(max_depth=100)
-        tree_clf.fit(x, y)
-
-        #prune tree and get maximum depth before and after pruning
-        tree = tree_clf.trained_tree
-
-        visualiser = VisualiseTree()
-
-        visualiser.visualise(tree)
-
-    else:"""
