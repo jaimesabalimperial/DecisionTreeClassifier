@@ -24,15 +24,21 @@ Contents
 5. `main.py`: Main file to run that calls all the functions and classes
 
 
-How to run the codes
+How to run the code
 -----------------------------------------------------------
-1. Run the `main.py` file 
-2. To change whether the clean or noisy data is used, chage the input from the print_results() function
-in line 27 to "Clean" or "Noisy" respectively.
-This will automatically adjust the path to match the data you require.
-3. To choose whether or not to prune the tree, the pruning boolean in line 20 (evaluate_CV() function) 
-can be changed to True when pruning or False when not pruning.
-- When pruning is set to True, nested cross-validation is performed to evaluate the pruned trees, 
+1. There are 4 possibilities to run the code depending on the user needs, see the different commands below:
+    a. Generating a decision tree using the clean data without pruning: 
+    `python3 main.py clean` (clean can be anything from ["clean", "Clean", "CLEAN", "c", "C"])
+    b. Generating a decision tree using the noisy data without pruning: 
+    `python3 main.py noisy` (noisy can be anything from ["noisy", "Noisy", "NOISY", "n", "N"])
+    c. Generating a decision tree and pruning it using the clean data:
+    `python3 main.py clean prune` (clean can be anything from ["clean", "Clean", "CLEAN", "c", "C"], 
+    prune can be anything from ["prune", "pruning", "Prune", "p", "P"])
+    c. Generating a decision tree and pruning it using the noisy data:
+    `python3 main.py noisy prune` (noisy can be anything from ["noisy", "Noisy", "NOISY", "n", "N"], 
+    prune can be anything from ["prune", "pruning", "Prune", "p", "P"])
+
+- When pruning the tree, nested cross-validation is performed to evaluate the pruned trees, 
 with 10 outer folds and 9 inner folds
-- When pruning is set to False, simple cross-validation is performed to evaluate the decision tree classifier.
+- When not pruning tree, simple cross-validation is performed to evaluate the decision tree classifier.
 
