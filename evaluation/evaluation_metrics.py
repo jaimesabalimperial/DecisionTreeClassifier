@@ -43,20 +43,20 @@ class EvaluationMetrics:
         #find precision, recall, and labels for all classes
         for room in range(len(list(set(self.y)))):
 
-            #all cases predicted to be negative, want to maintain information by inputting nan
+            #all cases predicted to be negative, want to maintain information by inputting np.nan
             try: 
                 precision = confusion_matrix[room][room] / np.array(confusion_matrix).sum(axis=1)[room]
             except ZeroDivisionError:
                 precision = np.nan
 
-            #no positives in input data, want to maintain information by inputting nan
+            #no positives in input data, want to maintain information by inputting np.nan
             try: 
                 recall = confusion_matrix[room][room] / np.array(confusion_matrix).sum(axis=0)[room]
             except ZeroDivisionError:
                 recall = np.nan
 
-            #f1_score is only nan when model had no opportunity to identify true positives, but it had no false
-            #negatives, else it is zero
+            #f1_score is only nan when model had no opportunity to identify true positives, 
+            #but it had no false negatives, else it is zero
             try: 
                 curr_f1 = (2 * precision * recall) / (precision + recall)
 
@@ -105,7 +105,7 @@ class EvaluationMetrics:
     def print_metrics(self, final_average_metrics, pruning):
         """"""
         # print final metrics
-        print(f"\nThe total confusion matrix is: \n {final_average_metrics[0]}")
+        print(f"\nThe total normalised confusion matrix is: \n {final_average_metrics[0]}")
         print(f"\nThe average accuracy is: \n{final_average_metrics[1]}")
         print(f"\nThe average precision for each class is: \n{final_average_metrics[2]}")
         print(f"\nThe average recall for each class is: \n{final_average_metrics[3]}")
@@ -125,13 +125,14 @@ class EvaluationMetrics:
         #simple cross-validation to evaluate decision tree classifier
         if not pruning:
             #initialise metric lists
-            metrics = {"Confusion Matrices": [], "Accuracies": [], "Precisions": [], "Recalls": [], "F1 Scores": []}
+            metrics_dict = {"Confusion Matrices": [], "Accuracies": [], "Precisions": [], "Recalls": [], "F1 Scores": []}
 
             folds = 10 
             cv.folds = folds
 
+            print("Currently evaluating: \n")
             for i, (train_indices, test_indices) in enumerate(cv.train_test_k_fold(x, y)):
-                print("\nFold ", i)
+                print("Fold #", i)
                 # get the dataset from the correct splits
                 x_train = x[train_indices, :]
                 y_train = y[train_indices]
@@ -150,14 +151,16 @@ class EvaluationMetrics:
                 accuracy = self.get_accuracy()
                 precision, recall, f1_score = zip(*self.get_precision_recall_f1())
 
-                metrics["Confusion Matrices"].append(np.array(confusion_mat))
-                metrics["Accuracies"].append(accuracy)
-                metrics["Precisions"].append(precision)
-                metrics["Recalls"].append(recall)
-                metrics["F1 Scores"].append(f1_score)
+                metrics = (confusion_mat, accuracy, precision, recall, f1_score)
+
+                for i, metric in enumerate(list(metrics_dict.keys())):
+                    if metric == "Confusion Matrices":
+                        metrics_dict[metric].append(np.array(metrics[i]))
+                    else:
+                        metrics_dict[metric].append(metrics[i])
 
             #calculate average metrics for cross-validation
-            avg_metrics = self.average_metrics(metrics, pruning)
+            avg_metrics = self.average_metrics(metrics_dict, pruning)
 
             #print final metrics
             self.print_metrics(avg_metrics, pruning)
@@ -170,13 +173,13 @@ class EvaluationMetrics:
             # Outer CV (10-fold)
             outer_folds = 10 
             cv.folds = outer_folds
+            print("Currently evaluating: \n")
             for i, (trainval_indices, test_indices) in enumerate(cv.train_test_k_fold(x, y)):
-                print("\nOUTER FOLD ", i, "\n")
+                print("OUTER FOLD #", i, "\n")
                 x_trainval = x[trainval_indices, :]
                 y_trainval = y[trainval_indices]
                 x_test = x[test_indices, :]
                 y_test = y[test_indices]
-                self.y = y_test
 
                 # Pre-split data for inner cross-validation (9 inner folds)
                 inner_folds = 9
@@ -187,7 +190,7 @@ class EvaluationMetrics:
 
                 # Inner CV (10-fold again)  
                 for j, (train_indices, val_indices) in enumerate(splits):
-                    print("inner fold ", j)
+                    print("Inner Fold #", j)
                     #retrieve training and validation sets from random indices (splits)
                     x_train = x_trainval[train_indices, :]
                     y_train = y_trainval[train_indices]
@@ -204,31 +207,30 @@ class EvaluationMetrics:
                     max_depth_before, max_depth_after, post_pruned = tree_prune.prune_tree()
 
                     self.y_predicted = tree_prune.predict_tree(x_test, post_pruned) #evaluate pruned tree on test set
+                    self.y = y_test
                     
-                    #evaluation metrics for each inner fold
+                    #evaluation metrics for each inner fold 
                     confusion_mat = self.get_confusion_matrix() 
                     accuracy = self.get_accuracy()
                     precision, recall, f1_score = zip(*self.get_precision_recall_f1())
 
-                    inner_metrics["Confusion Matrices"].append(np.array(confusion_mat))
-                    inner_metrics["Accuracies"].append(accuracy)
-                    inner_metrics["Precisions"].append(precision)
-                    inner_metrics["Recalls"].append(recall)
-                    inner_metrics["F1 Scores"].append(f1_score)
-                    inner_metrics["Max Depth Before"].append(max_depth_before)
-                    inner_metrics["Max Depth After"].append(max_depth_after)
+                    #make list of all metrics
+                    metrics = (confusion_mat, accuracy, precision, recall, f1_score, max_depth_before, max_depth_after)
 
-                #calculate average metrics for cross-validation
+                    for i, metric in enumerate(list(inner_metrics.keys())):
+                        if metric == "Confusion Matrices":
+                            inner_metrics[metric].append(np.array(metrics[i]))
+                        else: 
+                            inner_metrics[metric].append(metrics[i])
+
+                #calculate final average metrics for nested cross-validation from averages of inner folds
                 avg_inner_metrics =  self.average_metrics(inner_metrics, pruning)
 
-                outer_metrics["Confusion Matrices"].append(avg_inner_metrics[0])
-                outer_metrics["Accuracies"].append(avg_inner_metrics[1])
-                outer_metrics["Precisions"].append(avg_inner_metrics[2])
-                outer_metrics["Recalls"].append(avg_inner_metrics[3])
-                outer_metrics["F1 Scores"].append(avg_inner_metrics[4])
-                outer_metrics["Max Depth Before"].append(avg_inner_metrics[5])
-                outer_metrics["Max Depth After"].append(avg_inner_metrics[6])
-
+                for i, metric in enumerate(list(outer_metrics.keys())):
+                    if metric == "Confusion Matrices":
+                        outer_metrics[metric].append(np.array(avg_inner_metrics[i]))
+                    else: 
+                        outer_metrics[metric].append(avg_inner_metrics[i])
 
             # calculate average metrics for outer folds
             avg_outer_metrics =  self.average_metrics(outer_metrics, pruning)

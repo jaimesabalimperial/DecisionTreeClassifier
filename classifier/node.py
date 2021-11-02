@@ -8,3 +8,4 @@ class Node:
         self.is_leaf = False
         self.parent = None
         self.depth = 0
+        self.max_depth = 0
