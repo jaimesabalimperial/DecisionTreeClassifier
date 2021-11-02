@@ -99,5 +99,6 @@ class TreePruning:
                 self.curr_depth -= 1
         
         self.max_depth_after = self.calculate_max_depth(node=self.trained_tree)
+
         return self.max_depth_before, self.max_depth_after, self.trained_tree
         

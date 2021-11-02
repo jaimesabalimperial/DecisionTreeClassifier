@@ -5,7 +5,7 @@ from numpy.random import default_rng
 class CrossValidation:
 
     def __init__(self):
-        seed = 60012 #set random seed 
+        seed = 60012 #set random seed to obtain reproducible results
         rg = default_rng(seed)
         self.folds = None
         self.random_generator = rg
