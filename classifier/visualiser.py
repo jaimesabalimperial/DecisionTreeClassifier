@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt 
 from matplotlib.patches import Patch
+import numpy as np
 import random
 
 
@@ -10,18 +11,19 @@ class VisualiseTree():
         self._nodes = []
         self.pruning = pruning
         self.parse_tree(tree_clf)
+        self.parents = {}
     
  
     # traverse tree to get co-ordinates of nodes (and store the parent node - for plotting)
-    def parse_tree(self, tree_clf, x_loc=0, depth=0, prev_width=0, prev_depth=0):
+    def parse_tree(self, tree_clf, x_loc=0, depth=0, prev_x_loc=0, prev_depth=0):
         """"""
-        self._nodes.append((x_loc,depth, prev_width, prev_depth, tree_clf.feature_num,
+        self._nodes.append((x_loc, depth, prev_x_loc, prev_depth, tree_clf.feature_num,
                            tree_clf.split_val, tree_clf.is_leaf, tree_clf.predicted_room)
-                         )
+                          )
 
         if not tree_clf.is_leaf:
-            self.parse_tree(tree_clf.left_daughter, x_loc-(10/(2**abs(depth))), depth-1, x_loc, depth)
-            self.parse_tree(tree_clf.right_daughter, x_loc+(10/(2**abs(depth))), depth-1, x_loc, depth)
+            self.parse_tree(tree_clf.left_daughter, x_loc - 2**(depth+3.2), depth-1, x_loc, depth)
+            self.parse_tree(tree_clf.right_daughter, x_loc + 2**(depth+3.2), depth-1, x_loc, depth)
     
 
     def plot(self):
@@ -30,7 +32,8 @@ class VisualiseTree():
         fig = plt.figure() 
         ax = fig.add_subplot(111)
 
-        attributes = ["x_loc", "y_loc", "prev_x", "prev_y", "feature_num", "split_val", "is_leaf", "predicted_room"]
+        attributes = ["x_loc", "depth", "prev_x_loc", "prev_depth", "feature_num", 
+                      "split_val", "is_leaf", "predicted_room"]
 
         attribute_dictionary = {}
 
@@ -38,43 +41,44 @@ class VisualiseTree():
             attribute_dictionary[att] = [node[i] for node in self._nodes]
 
         x_loc = attribute_dictionary["x_loc"]
-        y_loc = attribute_dictionary["y_loc"]
-        prev_x = attribute_dictionary["prev_x"]
-        prev_y = attribute_dictionary["prev_y"]
+        depth = attribute_dictionary["depth"]
+        prev_x = attribute_dictionary["prev_x_loc"]
+        prev_depth = attribute_dictionary["prev_depth"]
         feature_num = attribute_dictionary["feature_num"]
         split_val = attribute_dictionary["split_val"]
         is_leaf = attribute_dictionary["is_leaf"]
         predicted_room = attribute_dictionary["predicted_room"]
 
-        plot_options = ['r', 'b', 'g', 'c', 'm','lightcoral', 'sandybrown',
-                        'slategray', 'blueviolet', 'crimson']
+        parent_colors = {}
 
-        # Dict 'parents' to ensure two nodes with the same parent are plotted with the same colour
-        # key : value
-        # parent_coords (tuple) : plot_option (str)
-        parents = {}
+        #loop over all nodes and assign a text box to them 
         for i in range(len(x_loc)):
 
-            if (prev_x[i], prev_y[i]) not in parents:
-                plot_option = random.choice(plot_options)
-                parents[(prev_x[i], prev_y[i])] = plot_option
-            else:
-                plot_option = parents[(prev_x[i], prev_y[i])]
+            #assign same color to line of nodes with same parent
+            if (prev_x[i], prev_depth[i]) not in parent_colors:
+                r = random.random()
+                b = random.random()
+                g = random.random()
+                color = (r, g, b)
 
+                parent_colors[(prev_x[i], prev_depth[i])] = color
+            else:
+                color = parent_colors[(prev_x[i], prev_depth[i])]
+            
             if is_leaf[i]:
                 textstr = '\n'.join(('leaf ',
                                      'prediction = %i' % (int(predicted_room[i])))
 
                                    )
-                ax.text(x_loc[i]-0.01,y_loc[i], textstr, fontsize=3.1, weight = "bold", 
+                ax.text(x_loc[i],depth[i], textstr, fontsize=3.1, weight = "bold", 
                         bbox=dict(facecolor='white', edgecolor='green', lw=0.5))
 
-            elif y_loc[i] == 0:
+            elif depth[i] == 0:
                 textstr = '\n'.join(('root ',
                                      'split_val = %.1f' % (split_val[i]),
                                      'feature =  %i' % (int(feature_num[i])))
                                     )
-                ax.text(x_loc[i]-0.01,y_loc[i], textstr, fontsize=3.1, weight = "bold",  
+                ax.text(x_loc[i],depth[i], textstr, fontsize=3.1, weight = "bold",  
                         bbox=dict(facecolor='white', edgecolor='red', lw=0.5))
 
             else:
@@ -83,10 +87,11 @@ class VisualiseTree():
                                      'feature =  %i' % (int(feature_num[i])))
                                     )
 
-                ax.text(x_loc[i]-0.01,y_loc[i],textstr, fontsize=3.1, weight = "bold", 
+                ax.text(x_loc[i],depth[i],textstr, fontsize=3.1, weight = "bold", 
                         bbox=dict(facecolor='white', edgecolor='blue', lw=0.5))
             
-            ax.plot([prev_x[i], x_loc[i]], [prev_y[i],y_loc[i]], plot_option, linewidth=0.65)
+            
+            ax.plot([prev_x[i], x_loc[i]], [prev_depth[i],depth[i]], c=color, linewidth=0.65)
         
         legend_elements = [Patch(facecolor='white', edgecolor='r',label='Root Node'), 
                            Patch(facecolor='white', edgecolor='b',label='Normal Node'), 
