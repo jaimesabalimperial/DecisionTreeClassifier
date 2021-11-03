@@ -1,7 +1,5 @@
 import sys
 from evaluation.evaluation_metrics import EvaluationMetrics
-from classifier.tree import DecisionTreeClassifier
-from classifier.visualiser import VisualiseTree
 from data_manipulation.load_dataset import load_dataset
 
 def print_results(data, pruning):
@@ -33,13 +31,12 @@ def print_results(data, pruning):
         #perform cross-validation evaluation without pruning
         metrics.evaluate_CV(x, y, pruning=False)
 
-
 if __name__ == '__main__':
 
     clean_argv_list = ["clean", "Clean", "CLEAN", "c", "C"]
     noisy_argv_list = ["noisy", "Noisy", "NOISY", "n", "N"]
     pruning_argv_list = ["prune", "pruning", "Prune", "p", "P"]
-    
+
 
     if sys.argv[1] in noisy_argv_list:
         if len(list(sys.argv)) == 2:
@@ -59,3 +56,4 @@ if __name__ == '__main__':
         print("python3 main.py clean prune -----> perform nested cross-validation on pruned tree classifier for clean dataset.\n")
         print("python3 main.py noisy -----> perform cross-validation on tree classifier for noisy dataset.\n")
         print("python3 main.py noisy prune -----> perform nested cross-validation on pruned tree classifier for noisy dataset.\n")
+

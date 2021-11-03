@@ -126,8 +126,10 @@ class TreePruning:
         target_node.left_daughter = None
         target_node.right_daughter = None
         target_node.is_leaf = True
+
         while target_node.depth > 0:
             target_node = target_node.parent
+            
         return target_node 
 
     def prune_tree(self):

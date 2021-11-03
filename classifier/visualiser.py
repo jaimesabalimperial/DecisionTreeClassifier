@@ -1,134 +1,105 @@
 import matplotlib.pyplot as plt 
-import numpy as np
+from matplotlib.patches import Patch
+import random
 
-class VisualiseTree:
 
-    def __init__(self):
-        self.figheight = 20
-        self.figwidth = 60
-        fig = plt.figure(figsize=(self.figwidth, self.figheight)) #make figure
-        ax = fig.gca()
+class VisualiseTree():
 
-        plt.title("Decision Tree Classifier")
-
-        self.fig = fig
-        self.ax = ax
-        self.line_yrange = None
-        self.line_xrange = None
-        self.parent_box_height = None
-        self.parent_box_width = None
-        self.tree = None
-        self.r = None
-        self.lines = []
-        self.node_boxes = []
-        self.leaf_boxes = []
-
-    def get_box_dim(self, box):
+    def __init__(self, tree_clf, pruning):
+        self._tree = tree_clf
+        self._nodes = []
+        self.pruning = pruning
+        self.parse_tree(tree_clf)
+    
+ 
+    # traverse tree to get co-ordinates of nodes (and store the parent node - for plotting)
+    def parse_tree(self, tree_clf, x_loc=0, depth=0, prev_width=0, prev_depth=0):
         """"""
-        r = self.fig.canvas.get_renderer()
+        self._nodes.append((x_loc,depth, prev_width, prev_depth, tree_clf.feature_num,
+                           tree_clf.split_val, tree_clf.is_leaf, tree_clf.predicted_room)
+                         )
 
-        t = self.ax.text(box[0], box[1], box[2])
+        if not tree_clf.is_leaf:
+            self.parse_tree(tree_clf.left_daughter, x_loc-(10/(2**abs(depth))), depth-1, x_loc, depth)
+            self.parse_tree(tree_clf.right_daughter, x_loc+(10/(2**abs(depth))), depth-1, x_loc, depth)
+    
 
-        bb = t.get_window_extent(renderer=r).inverse_transformed(self.ax.transData)
-        width = bb.width
-        height = bb.height
+    def plot(self):
+        """"""
 
-        return width, height
+        fig = plt.figure() 
+        ax = fig.add_subplot(111)
 
-    def place_text(self, depth, split_val, feature_num, parent_loc):
-        if depth == 0:
-            textstr = '\n'.join(('root',
-                                 'split_val: %.1f' % (split_val),
-                                 'feature_num: %i' % (feature_num))
-                               )
+        attributes = ["x_loc", "y_loc", "prev_x", "prev_y", "feature_num", "split_val", "is_leaf", "predicted_room"]
 
-            x = parent_loc[0]
-            y = parent_loc[1]
+        attribute_dictionary = {}
 
-            text_box = (x, y, textstr)
+        for i, att in enumerate(attributes):
+            attribute_dictionary[att] = [node[i] for node in self._nodes]
+
+        x_loc = attribute_dictionary["x_loc"]
+        y_loc = attribute_dictionary["y_loc"]
+        prev_x = attribute_dictionary["prev_x"]
+        prev_y = attribute_dictionary["prev_y"]
+        feature_num = attribute_dictionary["feature_num"]
+        split_val = attribute_dictionary["split_val"]
+        is_leaf = attribute_dictionary["is_leaf"]
+        predicted_room = attribute_dictionary["predicted_room"]
+
+        plot_options = ['r', 'b', 'g', 'c', 'm','lightcoral', 'sandybrown',
+                        'slategray', 'blueviolet', 'crimson']
+
+        # Dict 'parents' to ensure two nodes with the same parent are plotted with the same colour
+        # key : value
+        # parent_coords (tuple) : plot_option (str)
+        parents = {}
+        for i in range(len(x_loc)):
+
+            if (prev_x[i], prev_y[i]) not in parents:
+                plot_option = random.choice(plot_options)
+                parents[(prev_x[i], prev_y[i])] = plot_option
+            else:
+                plot_option = parents[(prev_x[i], prev_y[i])]
+
+            if is_leaf[i]:
+                textstr = '\n'.join(('leaf ',
+                                     'prediction = %i' % (int(predicted_room[i])))
+
+                                   )
+                ax.text(x_loc[i]-0.01,y_loc[i], textstr, fontsize=3.1, weight = "bold", 
+                        bbox=dict(facecolor='white', edgecolor='green', lw=0.5))
+
+            elif y_loc[i] == 0:
+                textstr = '\n'.join(('root ',
+                                     'split_val = %.1f' % (split_val[i]),
+                                     'feature =  %i' % (int(feature_num[i])))
+                                    )
+                ax.text(x_loc[i]-0.01,y_loc[i], textstr, fontsize=3.1, weight = "bold",  
+                        bbox=dict(facecolor='white', edgecolor='red', lw=0.5))
+
+            else:
+                textstr = '\n'.join((
+                                     'split_val =  %.1f' % (split_val[i]),
+                                     'feature =  %i' % (int(feature_num[i])))
+                                    )
+
+                ax.text(x_loc[i]-0.01,y_loc[i],textstr, fontsize=3.1, weight = "bold", 
+                        bbox=dict(facecolor='white', edgecolor='blue', lw=0.5))
             
-            self.node_boxes.append(text_box)
+            ax.plot([prev_x[i], x_loc[i]], [prev_y[i],y_loc[i]], plot_option, linewidth=0.65)
+        
+        legend_elements = [Patch(facecolor='white', edgecolor='r',label='Root Node'), 
+                           Patch(facecolor='white', edgecolor='b',label='Normal Node'), 
+                           Patch(facecolor='white', edgecolor='g',label='Leaf Node')]
 
-        else: 
-            textstr = '\n'.join(('depth: %i' % (depth),
-                                 'split_val: %.1f' % (split_val),
-                                 'feature_num: %i' % (feature_num))
-                               )
+        if self.pruning:
+            title_txt = "Sample Pruned Decision Tree Classifier for Outer Fold #0 and Inner Fold #0"
+        else:
+            title_txt = "Sample Decision Tree Classifier for Fold #0"
 
-            x = self.line_xrange[0]
-            y = self.line_yrange[0] - self.parent_box_height/2
-
-            text_box = (x, y, textstr)
-
-            self.node_boxes.append(text_box)
-
-    
-    def make_tree_lines(self, parent_loc):
-        """"""
-        self.line_xrange = (parent_loc[0] - self.figwidth*self.r, parent_loc[0])
-        y_max = parent_loc[1] - self.parent_box_height/2
-        self.line_yrange = (parent_loc[1]*(1 - 1/self.tree.max_depth), y_max)
-
-        x_left_connection = self.line_xrange
-        x_right_connection = (self.line_xrange[1], -self.line_xrange[0])
-
-        #lines connecting parent to daughters
-        line1 = (x_left_connection, self.line_yrange)
-        line2 = (x_right_connection, self.line_yrange)
-
-        self.lines.append((line1, line2))
-
-    def create_tree_objects(self, tree_clf, depth = 0, parent_loc = (0, 19)):
-        """Visualises the decision tree classifier. """
-        self.tree = tree_clf
-        self.r = 2**(depth+1)
-
-        #recursively go through tree
-        if not tree_clf.is_leaf: 
-            depth = tree_clf.depth
-            split = tree_clf.split_val
-            feature = tree_clf.feature_num
-
-            self.place_text(depth, split, feature, parent_loc)
-            text_box = self.node_boxes[depth]
-            self.parent_box_width, self.parent_box_height = self.get_box_dim(text_box)
-
-            self.make_tree_lines(parent_loc)
-            left_daughter_loc = (self.line_xrange[0], self.line_yrange[0] - self.parent_box_height/2)
-            right_daughter_loc = (-self.line_xrange[0], self.line_yrange[0] - self.parent_box_height/2)
-
-            #recursively visualise left and right daughters
-            self.create_tree_objects(tree_clf.left_daughter, depth = depth + 1, parent_loc=left_daughter_loc)
-            self.create_tree_objects(tree_clf.right_daughter, depth = depth + 1, parent_loc=right_daughter_loc)
-
-        else: 
-            predicted_room = tree_clf.predicted_room
-
-            textstr = '\n'.join(('leaf',
-                                 'prediction: %i' % (predicted_room))
-                                )
-
-            x = self.line_xrange[0]
-            y = self.line_yrange[0] - self.parent_box_height/2
-
-            text_box = (x, y, textstr)
-
-            self.leaf_boxes.append(text_box)
-
-    
-    def visualise(self, tree_clf):
-
-        self.create_tree_objects(tree_clf)
-
-        for box, (line1, line2) in zip(self.node_boxes, self.lines):
-
-            #plot each nodes' box with the connecting lines coming out of it
-            self.ax.text(box[0], box[1], box[2], bbox=dict(facecolor='none', edgecolor='blue'))
-            self.ax.plot(line1[0], line1[1])
-            self.ax.plot(line2[0], line2[1])
-
-        for leaf_box in self.leaf_boxes:
-            self.ax.text(leaf_box[0], leaf_box[1], leaf_box[2], bbox=dict(facecolor='none', edgecolor='green'))
-
-
+        plt.title(title_txt)
+        plt.ylabel(("Depth of Tree"))
+        plt.legend(handles=legend_elements, loc = "upper left", fontsize=6)
         plt.show()
+        
+

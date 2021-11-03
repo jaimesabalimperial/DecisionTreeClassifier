@@ -1,4 +1,5 @@
 import numpy as np
+from classifier.visualiser import VisualiseTree
 from evaluation.cross_validation import CrossValidation
 from classifier.tree import DecisionTreeClassifier
 from evaluation.prune import TreePruning
@@ -130,9 +131,9 @@ class EvaluationMetrics:
             folds = 10 
             cv.folds = folds
 
-            print("Currently evaluating: \n")
+            print("Currently evaluating: ")
             for i, (train_indices, test_indices) in enumerate(cv.train_test_k_fold(x, y)):
-                print("Fold #", i)
+                print("\nFold #", i)
                 # get the dataset from the correct splits
                 x_train = x[train_indices, :]
                 y_train = y[train_indices]
@@ -141,6 +142,10 @@ class EvaluationMetrics:
 
                 tree_clf = DecisionTreeClassifier(max_depth=100)
                 tree_clf.fit(x_train, y_train)
+
+                if i == 0:
+                    tree = tree_clf.trained_tree
+                    visualiser = VisualiseTree(tree, pruning)
 
                 #predict on test data
                 self.y_predicted = tree_clf.predict(x_test)
@@ -173,9 +178,9 @@ class EvaluationMetrics:
             # Outer CV (10-fold)
             outer_folds = 10 
             cv.folds = outer_folds
-            print("Currently evaluating: \n")
+            print("Currently evaluating: ")
             for i, (trainval_indices, test_indices) in enumerate(cv.train_test_k_fold(x, y)):
-                print("OUTER FOLD #", i, "\n")
+                print("\nOUTER FOLD #", i, "\n")
                 x_trainval = x[trainval_indices, :]
                 y_trainval = y[trainval_indices]
                 x_test = x[test_indices, :]
@@ -205,6 +210,9 @@ class EvaluationMetrics:
                     tree = tree_clf.trained_tree
                     tree_prune = TreePruning(tree, x_train, x_val, y_train, y_val, self)
                     max_depth_before, max_depth_after, post_pruned = tree_prune.prune_tree()
+
+                    if i == 0 and j == 0:
+                        visualiser = VisualiseTree(post_pruned, pruning)
 
                     self.y_predicted = tree_prune.predict_tree(x_test, post_pruned) #evaluate pruned tree on test set
                     self.y = y_test
@@ -237,3 +245,6 @@ class EvaluationMetrics:
 
             # print final metrics
             self.print_metrics(avg_outer_metrics, pruning)
+        
+        #plot sample classifier
+        visualiser.plot()
