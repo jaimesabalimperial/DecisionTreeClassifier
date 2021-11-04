@@ -16,7 +16,16 @@ class VisualiseTree():
  
     # traverse tree to get co-ordinates of nodes (and store the parent node - for plotting)
     def parse_tree(self, tree_clf, x_loc=0, depth=0, prev_x_loc=0, prev_depth=0):
-        """"""
+        """Parses through tree and fills in the attribute self._nodes with the attributes of each node 
+        tree. 
+
+        Args: 
+            tree_clf (Node()): trained decision tree classifier.
+            x_loc (float): location of node in x-axis.
+            depth (float): depth of node in tree (used as y-coordinate of node).
+            prev_x_loc (float): location of parent node in x-axis.
+            prev_depth (float): depth of parent node in tree.
+        """
         self._nodes.append((x_loc, depth, prev_x_loc, prev_depth, tree_clf.feature_num,
                            tree_clf.split_val, tree_clf.is_leaf, tree_clf.predicted_room, tree_clf.parent)
                           )
@@ -27,7 +36,9 @@ class VisualiseTree():
     
 
     def plot(self):
-        """"""
+        """Plots a visualisation of the nodes contained in the trained decision tree classifier
+        used as input to the VisualiseTree() object. 
+        """
 
         fig = plt.figure() 
         ax = fig.add_subplot(111)
