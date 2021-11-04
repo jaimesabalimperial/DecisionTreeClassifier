@@ -18,7 +18,7 @@ class VisualiseTree():
     def parse_tree(self, tree_clf, x_loc=0, depth=0, prev_x_loc=0, prev_depth=0):
         """"""
         self._nodes.append((x_loc, depth, prev_x_loc, prev_depth, tree_clf.feature_num,
-                           tree_clf.split_val, tree_clf.is_leaf, tree_clf.predicted_room)
+                           tree_clf.split_val, tree_clf.is_leaf, tree_clf.predicted_room, tree_clf.parent)
                           )
 
         if not tree_clf.is_leaf:
@@ -33,7 +33,7 @@ class VisualiseTree():
         ax = fig.add_subplot(111)
 
         attributes = ["x_loc", "depth", "prev_x_loc", "prev_depth", "feature_num", 
-                      "split_val", "is_leaf", "predicted_room"]
+                      "split_val", "is_leaf", "predicted_room", "parents"]
 
         attribute_dictionary = {}
 
@@ -48,6 +48,7 @@ class VisualiseTree():
         split_val = attribute_dictionary["split_val"]
         is_leaf = attribute_dictionary["is_leaf"]
         predicted_room = attribute_dictionary["predicted_room"]
+        parents = attribute_dictionary["parents"]
 
         parent_colors = {}
 
@@ -55,15 +56,15 @@ class VisualiseTree():
         for i in range(len(x_loc)):
 
             #assign same color to line of nodes with same parent
-            if (prev_x[i], prev_depth[i]) not in parent_colors:
+            if parents[i] not in parent_colors:
                 r = random.random()
                 b = random.random()
                 g = random.random()
                 color = (r, g, b)
 
-                parent_colors[(prev_x[i], prev_depth[i])] = color
+                parent_colors[parents[i]] = color
             else:
-                color = parent_colors[(prev_x[i], prev_depth[i])]
+                color = parent_colors[parents[i]]
             
             if is_leaf[i]:
                 textstr = '\n'.join(('leaf ',
